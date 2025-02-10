@@ -224,4 +224,409 @@ contract InsuranceCover is ReentrancyGuard, Ownable {
         uint256 maxAmount = (pool.totalUnit * capacity) / 100;
         return (maxAmount, pool.asset, pool.assetType);
     }
+
+    function updateCover(
+        uint256 _coverId,
+        string memory _coverName,
+        CoverLib.RiskType _riskType,
+        string memory _cid,
+        string memory _chains,
+        uint256 _capacity,
+        uint256 _poolId
+    ) public onlyOwner {
+        CoverLib.Pool memory pool = lpContract.getPool(_poolId);
+
+        if (pool.riskType != _riskType || _capacity > pool.percentageSplitBalance) {
+            revert WrongPool();
+        }
+
+        CoverLib.Cover storage cover = covers[_coverId];
+
+        uint256 _maxAmount = (pool.totalUnit * _capacity) / 100;
+
+        if (cover.coverValues > _maxAmount) {
+            revert WrongPool();
+        }
+
+        CoverLib.Cover[] memory coversInPool = lpContract.getPoolCovers(
+            _poolId
+        );
+        for (uint256 i = 0; i < coversInPool.length; i++) {
+            if (
+                keccak256(abi.encodePacked(coversInPool[i].coverName)) ==
+                keccak256(abi.encodePacked(_coverName)) &&
+                coversInPool[i].id != _coverId
+            ) {
+                revert NameAlreadyExists();
+            }
+        }
+
+        uint256 oldCoverCapacity = cover.capacity;
+
+        cover.coverName = _coverName;
+        cover.chains = _chains;
+        cover.capacity = _capacity;
+        cover.CID = _cid;
+        cover.capacityAmount = _maxAmount;
+        cover.poolId = _poolId;
+        cover.maxAmount = _maxAmount - cover.coverValues;
+
+        if (oldCoverCapacity > _capacity) {
+            uint256 difference = oldCoverCapacity - _capacity;
+            lpContract.increasePercentageSplit(_poolId, difference);
+        } else if (oldCoverCapacity < _capacity) {
+            uint256 difference = _capacity - oldCoverCapacity;
+            lpContract.reducePercentageSplit(_poolId, difference);
+        }
+
+        lpContract.updatePoolCovers(_poolId, cover);
+
+        emit CoverUpdated(_coverId, _coverName, _riskType);
+    }
+
+    function purchaseCover(
+        uint256 _coverId,
+        uint256 _coverValue,
+        uint256 _coverPeriod,
+        uint256 _coverFee
+    ) public payable nonReentrant {
+        if (_coverFee < 0) {
+            revert InvalidAmount();
+        }
+        if (_coverPeriod <= 27 || _coverPeriod >= 366) {
+            revert InvalidCoverDuration();
+        }
+        if (!coverExists[_coverId]) {
+            revert CoverNotAvailable();
+        }
+
+        CoverLib.Cover storage cover = covers[_coverId];
+
+        if (_coverValue > cover.maxAmount) {
+            revert InsufficientPoolBalance();
+        }
+
+        uint256 newCoverValues = cover.coverValues + _coverValue;
+
+        if (newCoverValues > cover.capacityAmount) {
+            revert InsufficientPoolBalance();
+        }
+
+        if (cover.adt == CoverLib.AssetDepositType.ERC20) {
+            bool success = IERC20(cover.asset).transferFrom(msg.sender, address(this), _coverFee);
+            require(success, "ERC20 transfer failed");
+        } else {
+            require(msg.value > 0, "Cover value cannot be zero");
+            coverFeeBalance += msg.value;
+        }
+
+        cover.coverValues = newCoverValues;
+        cover.maxAmount = cover.capacityAmount - newCoverValues;
+
+        cover.maxAmount = (cover.capacityAmount - cover.coverValues);
+        CoverLib.GenericCoverInfo storage userCover = userCovers[msg.sender][
+            _coverId
+        ];
+
+        require(userCover.coverValue == 0, "User already purchased cover");
+        userCovers[msg.sender][_coverId] = CoverLib.GenericCoverInfo({
+                user: msg.sender,
+                coverId: _coverId,
+                riskType: cover.riskType,
+                coverName: cover.coverName,
+                coverValue: _coverValue,
+                claimPaid: 0,
+                coverPeriod: _coverPeriod,
+                endDay: block.timestamp + (_coverPeriod * 1 days),
+                isActive: true
+            });
+
+        bool userExists = false;
+        for (uint i = 0; i < participants.length; i++) {
+            if (participants[i] == msg.sender) {
+                userExists = true;
+                break;
+            }
+        }
+
+        if (!userExists) {
+            participants.push(msg.sender);
+        }
+        participation[msg.sender] += 1;
+
+        emit CoverPurchased(msg.sender, _coverValue, _coverFee, cover.riskType);
+    }
+
+    function getAllUserCovers(
+        address user
+    ) external view returns (CoverLib.GenericCoverInfo[] memory) {
+        uint256 actualCount = 0;
+        for (uint256 i = 0; i < coverIds.length; i++) {
+            uint256 id = coverIds[i];
+            if (userCovers[user][id].coverValue > 0) {
+                actualCount++;
+            }
+        }
+
+        CoverLib.GenericCoverInfo[]
+            memory userCoverList = new CoverLib.GenericCoverInfo[](actualCount);
+
+        uint256 index = 0;
+        for (uint256 i = 0; i < coverIds.length; i++) {
+            uint256 id = coverIds[i];
+            if (userCovers[user][id].coverValue > 0) {
+                userCoverList[index] = userCovers[user][id];
+                index++;
+            }
+        }
+
+        return userCoverList;
+    }
+
+    function getAllAvailableCovers()
+        external
+        view
+        returns (CoverLib.Cover[] memory)
+    {
+        uint256 actualCount = 0;
+        for (uint256 i = 0; i < coverIds.length; i++) {
+            uint256 id = coverIds[i];
+            if (coverExists[id]) {
+                actualCount++;
+            }
+        }
+
+        CoverLib.Cover[] memory availableCovers = new CoverLib.Cover[](
+            actualCount
+        );
+
+        uint256 index = 0;
+        for (uint256 i = 0; i < coverIds.length; i++) {
+            uint256 id = coverIds[i];
+            if (coverExists[id]) {
+                availableCovers[index] = covers[id];
+                index++;
+            }
+        }
+
+        return availableCovers;
+    }
+
+    function getCoverInfo(
+        uint256 _coverId
+    ) external view returns (CoverLib.Cover memory) {
+        return covers[_coverId];
+    }
+
+    function getUserCoverInfo(
+        address user,
+        uint256 _coverId
+    ) external view returns (CoverLib.GenericCoverInfo memory) {
+        return userCovers[user][_coverId];
+    }
+
+    function updateUserCoverValue(
+        address user,
+        uint256 _coverId,
+        uint256 _claimPaid
+    ) public onlyGovernance nonReentrant {
+        userCovers[user][_coverId].coverValue -= _claimPaid;
+        userCovers[user][_coverId].claimPaid += _claimPaid;
+    }
+
+    function deleteExpiredUserCovers(address _user) external nonReentrant {
+        for (uint256 i = 1; i < coverIds.length; i++) {
+            uint256 id = coverIds[i];
+            CoverLib.GenericCoverInfo storage userCover = userCovers[_user][id];
+            if (userCover.isActive && block.timestamp > userCover.endDay) {
+                userCover.isActive = false;
+                delete userCovers[_user][id];
+            }
+        }
+    }
+
+    function getCoverFeeBalance() external view returns (uint256) {
+        return coverFeeBalance;
+    }
+
+    function updateMaxAmount(uint256 _coverId) public onlyPool nonReentrant {
+        CoverLib.Cover storage cover = covers[_coverId];
+        CoverLib.Pool memory pool = lpContract.getPool(cover.poolId);
+        require(cover.capacity > 0, "Invalid cover capacity");
+        uint256 amount = (pool.totalUnit * cover.capacity) / 100;
+        covers[_coverId].capacityAmount = amount;
+        covers[_coverId].maxAmount = (covers[_coverId].capacityAmount -
+            covers[_coverId].coverValues);
+    }
+
+    function claimPayoutForLP(uint256 _poolId) external nonReentrant {
+        CoverLib.Deposits memory depositInfo = lpContract.getUserPoolDeposit(
+            _poolId,
+            msg.sender
+        );
+
+        uint256 lastClaimTime;
+        if (NextLpClaimTime[msg.sender][_poolId] == 0) {
+            lastClaimTime = depositInfo.startDate;
+        } else {
+            lastClaimTime = NextLpClaimTime[msg.sender][_poolId];
+        }
+
+        uint256 currentTime = block.timestamp;
+        if (depositInfo.status != CoverLib.Status.Active) {
+            currentTime = depositInfo.withdrawalInitiated;
+        }
+
+        uint256 claimableDays = (currentTime - lastClaimTime) / 1 days;
+
+        require (claimableDays > 0, "No claimable rewards");
+        
+        uint256 claimableAmount = depositInfo.dailyPayout * claimableDays;
+
+        require(claimableAmount > 0, "No claimable rewards for user");
+
+        uint256 assetCoverFeeBalance;
+        CoverLib.Pool memory selectedPool = lpContract.getPool(_poolId);
+
+        if (selectedPool.assetType == CoverLib.AssetDepositType.ERC20) {
+            uint256 balance = IERC20(selectedPool.asset).balanceOf(address(this));
+            assetCoverFeeBalance = balance;
+        } else {
+            assetCoverFeeBalance = coverFeeBalance;
+        }
+        
+        require(claimableAmount <= assetCoverFeeBalance, "Insufficient cover balance");
+        NextLpClaimTime[msg.sender][_poolId] = block.timestamp;
+
+        if (selectedPool.assetType == CoverLib.AssetDepositType.ERC20) {
+            bool success = IERC20(selectedPool.asset).transfer(
+                msg.sender,
+                claimableAmount
+            );
+            require(success, "ERC20 transfer failed");
+        } else {
+            (bool success, ) = msg.sender.call{value: claimableAmount}("");
+            require(success, "Native asset transfer failed");
+            coverFeeBalance -= claimableAmount;
+        }
+
+        emit PayoutClaimed(msg.sender, _poolId, claimableAmount);
+    }
+
+    function claimPayoutForVault(uint256 vaultId) external nonReentrant {
+        CoverLib.Deposits[] memory deposits = vaultContract.getUserVaultPoolDeposits(
+            vaultId,
+            msg.sender
+        );
+
+        uint256 totalClaim;
+        uint256 lastClaimTime;
+        if (LastVaultClaimTime[msg.sender][vaultId] == 0) {
+            lastClaimTime = deposits[0].startDate;
+        } else {
+            lastClaimTime = LastVaultClaimTime[msg.sender][vaultId];
+        }
+
+        uint256 currentTime = block.timestamp;
+        if (deposits[0].status != CoverLib.Status.Active) {
+            currentTime = deposits[0].withdrawalInitiated;
+        }
+
+        uint256 claimableDays = (currentTime - lastClaimTime) / 1 days;
+
+        for (uint256 i = 0; i < deposits.length; i++) {
+            CoverLib.Deposits memory deposit = deposits[i];
+            uint256 claimableAmount = deposit.dailyPayout * claimableDays;
+            totalClaim += claimableAmount;
+        }
+
+        require(totalClaim > 0, "No claim yet for user");
+
+        uint256 assetCoverFeeBalance;
+        IVault.Vault memory selectedVault = vaultContract.getVault(vaultId);
+
+        if (selectedVault.assetType == CoverLib.AssetDepositType.ERC20) {
+            uint256 balance = IERC20(selectedVault.asset).balanceOf(address(this));
+            assetCoverFeeBalance = balance;
+        } else {
+            assetCoverFeeBalance = coverFeeBalance;
+        }
+
+        require(totalClaim <= assetCoverFeeBalance, "Insufficient cover balance");
+
+        LastVaultClaimTime[msg.sender][vaultId] = block.timestamp;
+        if (selectedVault.assetType == CoverLib.AssetDepositType.ERC20) {
+            bool success = IERC20(selectedVault.asset).transfer(
+                msg.sender,
+                totalClaim
+            );
+            require(success, "ERC20 transfer failed");
+        } else {
+            (bool success, ) = msg.sender.call{value: totalClaim}("");
+            require(success, "Native asset transfer failed");
+            coverFeeBalance -= totalClaim;
+        }
+
+        emit PayoutClaimed(msg.sender, vaultId, totalClaim);
+    }
+
+    function getDepositClaimableDays(
+        address user,
+        uint256 _poolId
+    ) public view returns (uint256) {
+        CoverLib.Deposits memory depositInfo = lpContract.getUserPoolDeposit(
+            _poolId,
+            user
+        );
+
+        uint256 lastClaimTime;
+        if (NextLpClaimTime[user][_poolId] == 0) {
+            lastClaimTime = depositInfo.startDate;
+        } else {
+            lastClaimTime = NextLpClaimTime[user][_poolId];
+        }
+        uint256 currentTime = block.timestamp;
+        if (depositInfo.status != CoverLib.Status.Active) {
+            currentTime = depositInfo.withdrawalInitiated;
+        }
+
+        uint256 claimableDays = (currentTime - lastClaimTime) / 1 days;
+
+        return claimableDays;
+    }
+
+    function addFundsToCoverContract(uint256 amount, CoverLib.AssetDepositType adt, address asset) public payable {
+        if (adt == CoverLib.AssetDepositType.ERC20) {
+            bool success = IERC20(asset).transferFrom(msg.sender, address(this), amount);
+            require(success, "ERC20 transfer failed");
+        } else {
+            require(msg.value > 0, "Cover value cannot be zero");
+            coverFeeBalance += msg.value;
+        }
+    }
+
+    function getLastClaimTime(
+        address user,
+        uint256 _poolId
+    ) public view returns (uint256) {
+        return NextLpClaimTime[user][_poolId];
+    }
+
+    function getAllParticipants() public view returns (address[] memory) {
+        return participants;
+    }
+
+    function getUserParticipation(address user) public view returns (uint256) {
+        return participation[user];
+    }
+
+    modifier onlyGovernance() {
+        require(msg.sender == governance, "Not authorized");
+        _;
+    }
+
+    modifier onlyPool() {
+        require(msg.sender == lpAddress, "Not authorized");
+        _;
+    }
 }
