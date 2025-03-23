@@ -6,9 +6,9 @@ import reportWebVitals from './reportWebVitals';
 import './global.css';
 
 // Mobile detection logic
-if (window.innerWidth <= 768) {
-  alert("This website is not optimized for mobile devices. Kindly use on desktop.");
-}
+// if (window.innerWidth <= 768) {
+//   alert("This website is not optimized for mobile devices. Kindly use on desktop.");
+// }
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement

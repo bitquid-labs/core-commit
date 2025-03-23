@@ -7,7 +7,7 @@ import IconDiscord from "assets/icons/IconDiscord";
 
 const SocialLinks: React.FC = () => {
   return (
-    <div className="relative w-full mt-70 flex flex-col gap-20">
+    <div className="relative md:w-full mt-70 flex flex-col gap-20 w-[90%] mx-auto">
       <ExternalLink
         iconComponent={IconDocs}
         title="Explore BQ Labs Docs."

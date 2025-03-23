@@ -233,8 +233,8 @@ const PoolDetail: React.FC<Props> = ({ poolId }) => {
 
   return (
     <div className="w-full">
-      <div className="px-42 py-32 border border-[#6B7280] bg-[#6B72801A] rounded-20 mt-20">
-        <div className="flex items-center justify-start mt-20">
+      <div className="md:px-42 md:py-32 px-18 py-28 border border-[#6B7280] bg-[#6B72801A] rounded-20 mt-20">
+        <div className="flex items-center md:justify-start justify-center mt-20 flex-col md:flex-row">
           {/* <div className="flex w-full max-w-[300px] items-center rounded-10 border border-[#9E9E9E] p-6">
             <div className="relative flex flex-col items-center w-full rounded-lg md:flex-row md:gap-0">
               {["Stake", "Unstake"].map((opt, index) => (
@@ -270,11 +270,11 @@ const PoolDetail: React.FC<Props> = ({ poolId }) => {
               {poolData?.poolName}
             </h2>
           </div>
-          <div className="flex items-center gap-8 ml-40 text-white">
-            <div className="border border-[#6B7280] rounded-10 bg-[#FFFFFF0D] py-12 px-20">
+          <div className="flex items-center gap-8 md:ml-40 ml-0 text-white mt-10 md:mt-0">
+            <div className="border border-[#6B7280] rounded-10 bg-[#FFFFFF0D] md:py-12 md:px-20 py-8 px-10">
               APY: {Number(poolData?.apy)}%
             </div>
-            <div className="flex items-center justify-center border border-[#6B7280] rounded-10 bg-[#FFFFFF0D] py-12 px-20">
+            <div className="flex items-center justify-center border border-[#6B7280] rounded-10 bg-[#FFFFFF0D] md:py-12 md:px-20 py-8 px-10">
               <img
                 src={networkBSCIcon}
                 className="h-24 w-25"
@@ -284,8 +284,8 @@ const PoolDetail: React.FC<Props> = ({ poolId }) => {
             </div>
           </div>
         </div>
-        <div className="flex justify-between w-full mt-10">
-          <div className="w-[60%] p-24 bg-[#FFFFFF0D] border border-[#FFFFFF33] rounded-10">
+        <div className="flex justify-between w-full mt-10 md:flex-row flex-col gap-12 md:gap-0">
+          <div className="md:w-[60%] w-full p-24 bg-[#FFFFFF0D] border border-[#FFFFFF33] rounded-10">
             <div className="w-full">
               <div className="flex items-center justify-between w-full mt-50">
                 <div className="">
@@ -326,7 +326,7 @@ const PoolDetail: React.FC<Props> = ({ poolId }) => {
                 <div className="text-25 font-[500]">
                   <input
                     onChange={(e) => setDepositAmount(e.target.value)}
-                    className="outline-none bg-transparent border-b-[#717A8C] border-b"
+                    className="outline-none bg-transparent border-b-[#717A8C] border-b md:w-full w-[180px]"
                     value={depositAmount}
                     placeholder="3.94"
                   />
@@ -361,7 +361,7 @@ const PoolDetail: React.FC<Props> = ({ poolId }) => {
               </div>
             </div>
           </div>
-          <div className="w-[39%] p-24 bg-[#FFFFFF0D] border border-[#FFFFFF33] rounded-10">
+          <div className="md:w-[39%] w-full md:p-24 p-18 bg-[#FFFFFF0D] border border-[#FFFFFF33] rounded-10">
             <div className="flex items-center justify-start gap-20">
               <div className="text-15 font-[600]">Risk Type:</div>
               <div className="border border-[#00ECBC] bg-[#00ECBC0D] rounded-8 px-24 py-4">
@@ -423,20 +423,20 @@ const PoolDetail: React.FC<Props> = ({ poolId }) => {
                 </div> */}
                 <div className="flex items-start justify-between w-full">
                   <div className="flex flex-col items-center justify-between h-full gap-5">
-                    <div className="text-15 font-[600]">Selected Strategy</div>
-                    <div className="bg-[#00ECBC1A] px-40 py-5 rounded-10">
+                    <div className="md:text-15 text-13 font-[600]">Selected Strategy</div>
+                    <div className="bg-[#00ECBC1A] md:px-40 px-8 py-5 rounded-10 md:scale-100 scale-[0.80]">
                       Investment Ongoing
                     </div>
                   </div>
                   <div className="flex flex-col items-center justify-between h-full gap-20">
-                    <span className="text-15 font-[600]">Per week</span>
-                    <span className="text-15 font-[600] py-5">
+                    <span className="md:text-15 text-13 font-[600]">Per week</span>
+                    <span className="md:text-15 text-13 font-[600] py-5">
                       {apy.perWeek} %
                     </span>
                   </div>
                   <div className="flex flex-col items-center justify-between h-full gap-5">
-                    <span className="text-15 font-[600]">Per month</span>
-                    <span className="text-15 font-[600] py-5">
+                    <span className="md:text-15 text-13 font-[600]">Per month</span>
+                    <span className="md:text-15 text-13 font-[600] py-5">
                       {apy.perMonth} %
                     </span>
                   </div>

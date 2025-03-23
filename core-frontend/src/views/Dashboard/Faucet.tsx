@@ -86,8 +86,8 @@ const Faucet: React.FC = () => {
   };
 
   return (
-    <div className="w-full flex items-start justify-between border border-[#6B7280] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-800 via-zinc-950 to-zinc-950 px-40 py-62 rounded-32 gridd">
-      <div className="w-[30%] flex flex-col justify-between items-start">
+    <div className="w-full flex flex-col md:flex-row items-start justify-between border border-[#6B7280] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-800 via-zinc-950 to-zinc-950 px-40 py-62 rounded-32 gridd scale-[0.85] md:scale-100 md:gap-0 gap-28">
+      <div className="md:w-[30%] w-full flex flex-col justify-between items-start">
         <h2 className="text-24 font-[800] text-[#FFFFFF]">BqBtc Testnet Faucet</h2>
         <p className="text-14 text-[#FFFFFFA3] my-25">
           We support BNB testnets. Soon we will onboard other chains as well. Connect your
@@ -113,7 +113,7 @@ const Faucet: React.FC = () => {
           </Button>
         )}
       </div>
-      <div className="w-[40%]">
+      <div className="md:w-[40%] w-full">
         <h2 className="text-24 font-[800] text-[#FFFFFF]">How it works?</h2>
         <ul className="text-14 text-[#FFFFFFA3]">
           <li>Step 1: Connect wallet for available Network</li>

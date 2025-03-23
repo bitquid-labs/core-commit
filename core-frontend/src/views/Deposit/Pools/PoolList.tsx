@@ -31,7 +31,7 @@ const PoolList: React.FC<Props> = ({
       <div className="w-full">
         <table className="w-full text-white">
           <thead className="">
-            <tr className="[&>th]:text-20 [&th]:font-500 h-45">
+            <tr className="md:[&>th]:text-20 [&>th]:text-10 [&th]:font-500 h-45">
               <th className=""></th>
               <th className="">Rating</th>
               <th className="">APY</th>
@@ -42,14 +42,15 @@ const PoolList: React.FC<Props> = ({
           <tbody>
             {poolData.map((pool, index) => (
               <>
-                <tr className="px-8 text-center" key={index}>
+                <tr className="px-8 text-center md:text-lg text-[12px]" key={index}>
                   <td className="font-[400] bg-[#1F1F1F] py-24 rounded-l-8">
-                    <div className="flex items-center justify-start w-full gap-12 pl-15">
+                    <div className="flex items-center justify-start w-full max-w-[105px] md:max-w-[305px] gap-12 md:pl-15 pl-9">
                       {pool.displayDetails ? (
-                        <IconDownIcon />
+                        <IconDownIcon className="hidden lg:block" />
                       ) : (
-                        <IconDownIcon className="-rotate-90" />
+                        <IconDownIcon className="hidden lg:block -rotate-90" />
                       )}
+
                       {pool.poolName}
                     </div>
                   </td>
@@ -65,7 +66,7 @@ const PoolList: React.FC<Props> = ({
                   <td className="bg-transparent">
                     <button
                       onClick={() => handleDeposit(Number(pool.id))}
-                      className="bg-[#00ECBC66] border border-[#00ECBC] px-45 py-7 rounded-8"
+                      className="bg-[#00ECBC66] border border-[#00ECBC] md:px-45 md:py-7 py-6 px-16 rounded-8 md:ml-0 ml-8"
                     >
                       Invest
                     </button>
@@ -73,15 +74,15 @@ const PoolList: React.FC<Props> = ({
                 </tr>
 
                 <tr className="text-center">
-                  <td className="font-[400] w-[80%] p-20 pt-0" colSpan={4}>
+                  <td className="font-[400] md:w-[80%] w-full md:px-16 px-0 p-2 pt-0" colSpan={4}>
                     <div className="bg-[#3D3D3D] rounded-b-4">
                       {!pool.displayDetails ? (
                         <></>
                       ) : (
-                        <div className="flex w-full px-45 py-25">
-                          <div className="flex w-[50%] flex-col items-center justify-center px-54 gap-12">
-                            <div className="flex items-center justify-between w-full">
-                              <span className="text-22 font-[600]">
+                        <div className="flex w-full md:px-45 md:py-25 p-2 md:pt-10 pt-5">
+                          <div className="flex w-[30%] md:w-[50%] flex-col items-center justify-center md:px-54 px-1 gap-12">
+                            <div className="flex flex-col md:flex-row items-center gap-10 md:gap-1 justify-between w-full">
+                              <span className="md:text-22 text-12 font-[600]">
                                 Network
                               </span>
                               <img
@@ -92,18 +93,18 @@ const PoolList: React.FC<Props> = ({
                               {/* <span>{pool.details.network}</span> */}
                             </div>
                           </div>
-                          <div className="flex w-[50%] flex-col items-center justify-center px-54 gap-12">
+                          <div className="flex w-[65%] md:w-[60%] flex-col items-center justify-center md:px-54 px-1 gap-12">
                             <div className="flex items-center justify-between w-full">
-                              <span className="text-14 font-[400]">
+                              <span className="md:text-14 text-12 font-[400]">
                                 Risk Covered
                               </span>
-                              <span className="text-[#00ECBC] text-14 font-[600]">
+                              <span className="text-[#00ECBC] md:text-14 text-12 font-[600]">
                                 {getRiskTypeName(pool.riskType)}
                               </span>
                             </div>
                             <div className="flex items-center justify-between w-full">
-                              <span className="text-14 font-[400]">TVL</span>
-                              <span className="text-14 font-[800]">
+                              <span className="md:text-14 text-12 font-[400]">TVL</span>
+                              <span className="md:text-14 text-12 font-[800]">
                                 {formatEther(pool.tvl || 0n)}
                               </span>
                             </div>
@@ -127,15 +128,15 @@ const PoolList: React.FC<Props> = ({
                         </div>
                       )}
                       <div
-                        className="flex items-center justify-center w-full gap-5 py-8 cursor-pointer"
+                        className="flex items-center justify-center w-full gap-5 py-8 cursor-pointer mb-10 md:pb-4"
                         onClick={() => {
                           setPoolsData((prev: any) =>
                             prev.map((pool: any, i: number) =>
                               i === index
                                 ? {
-                                    ...pool,
-                                    displayDetails: !pool.displayDetails,
-                                  }
+                                  ...pool,
+                                  displayDetails: !pool.displayDetails,
+                                }
                                 : pool
                             )
                           );

@@ -23,7 +23,7 @@ const VaultCard: React.FC<VaultCardType> = ({
 }) => {
   const tvl = useVaultTVL(id);
   return (
-    <div className="rounded-30 p-27 relative border border-[#00ECBC] overflow-hidden bg-gradient-to-b from-[#05050500] to-[#00ECBC4D] mx-15">
+    <div className="rounded-30 p-27 relative border border-[#00ECBC] overflow-hidden bg-gradient-to-b from-[#05050500] to-[#00ECBC4D] mx-15 md:mx-6 ">
       <div className="absolute inset-0 backdrop-blur-md bg-black/50"></div>
       <div className="relative z-[10]">
         <span className="text-14 font-[700] text-[#00ECBC]">{name}</span>
@@ -50,7 +50,7 @@ const VaultCard: React.FC<VaultCardType> = ({
       <div className="relative z-[10] mb-20">
         <div className="text-[#9DA3BA] text-13 font-[500] mb-10">TVL of Strategy</div>
         <div className="flex items-end">
-          <span className="text-[#00ECBC] text-24 font-[700] leading-[25px]">{tvl}</span>
+          <span className="text-[#00ECBC] text-22 font-[700] leading-[25px]">{tvl}</span>
           <span className="text-[#FFF] text-12 ml-4">USD</span>
         </div>
       </div>

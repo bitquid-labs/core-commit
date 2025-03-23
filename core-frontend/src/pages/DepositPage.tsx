@@ -74,14 +74,14 @@ const DepositPage: React.FC = () => {
   }, [pools]);
 
   return (
-    <div className="w-full mx-auto pt-70">
+    <div className="md:w-full w-[95%] mx-auto md:pt-70 pt-32">
       {showIntroText ? (
         <>
-          <div className="flex flex-col items-center justify-center w-full">
-            <h2 className="text-50 font-[700]">
+          <div className="flex flex-col items-center justify-center md:w-full w-[85%] mx-auto">
+            <h2 className="text-50 text-center font-[700]">
               Introducing <span className="text-[#00ECBC]">BQ Deposits</span>
             </h2>
-            <div className="mt-24 max-w-700 text-18 font-[500] text-[#FFFFFFA3]">
+            <div className=" text-center mt-24 max-w-700 md:text-18 text-15 font-[500] text-[#FFFFFFA3]">
               Grow and protect your assets through carefully curated pools and
               strategies tailored for the Web3 ecosystem. Introducing{" "}
               <span className="text-[#00ECBC]">BQ Deposits</span>—your gateway

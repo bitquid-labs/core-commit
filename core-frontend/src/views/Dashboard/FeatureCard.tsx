@@ -15,7 +15,7 @@ const FeatureCard: React.FC<Props> = ({
   bgImg,
 }) => {
   return (
-    <div className="relative w-full border border-[#6B7280] rounded-32 px-24 py-32 min-h-560 overflow-hidden">
+    <div className="relative w-full min-w-[20rem] border border-[#6B7280] rounded-32 px-24 py-32 md:min-h-560 min-h-480 overflow-hidden mx-16 ">
       <div className="flex items-center justify-end">
         <div className="flex items-center justify-center gap-4 border border-[#FFFFFF0A] rounded-6">
           <a href={learnmoreLink}>Learn more</a>
