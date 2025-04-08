@@ -203,19 +203,6 @@ contract InsurancePool is ReentrancyGuard, Ownable {
 
     function getPool(uint256 _poolId) public view returns (CoverLib.Pool memory) {
         CoverLib.Pool memory pool = pools[_poolId];
-        uint256 priceInUSD;
-        uint256 decimals;
-
-        if (pool.isActive && pool.asset == nullAsset) {
-            priceInUSD = getPriceInUSD(nullAsset);
-            decimals = 18;
-        } else {
-            priceInUSD = getPriceInUSD(pool.asset);
-            IERC20Extended token = IERC20Extended(pool.asset);
-            decimals = token.decimals();
-        }
-        uint256 scaledTotalUnit = pool.totalUnit * (10 ** (18 - decimals));
-        pool.tvl = (priceInUSD * scaledTotalUnit) / 1e18;
 
         return pool;
     }
@@ -312,19 +299,6 @@ contract InsurancePool is ReentrancyGuard, Ownable {
             ICoverContract.updateMaxAmount(poolCovers[i].id);
         }
 
-        if (selectedPool.isActive && selectedPool.asset == nullAsset) {
-            priceInUSD = getPriceInUSD(nullAsset);
-            decimals = 18;
-        } else {
-            priceInUSD = getPriceInUSD(selectedPool.asset);
-            IERC20Extended token = IERC20Extended(selectedPool.asset);
-            decimals = token.decimals();
-        }
-
-        uint256 scaledTotalUnit = selectedPool.totalUnit * (10 ** (18 - decimals));
-
-        selectedPool.tvl = (priceInUSD * scaledTotalUnit) / 1e18;
-
         userDeposit.amount = 0;
         if (selectedPool.assetType == CoverLib.AssetDepositType.ERC20) {
             bool success = IERC20(selectedPool.asset).transfer(msg.sender, amount);
@@ -364,23 +338,11 @@ contract InsurancePool is ReentrancyGuard, Ownable {
         uint256 coverUnits = baseValue * selectedPool.leverage;
         selectedPool.coverUnits = coverUnits;
         selectedPool.baseValue = baseValue;
+        selectedPool.tvl -= userDeposit.amount;
         CoverLib.Cover[] memory poolCovers = getPoolCovers(_poolId);
         for (uint256 i = 0; i < poolCovers.length; i++) {
             ICoverContract.updateMaxAmount(poolCovers[i].id);
         }
-
-        if (selectedPool.isActive && selectedPool.asset == nullAsset) {
-            priceInUSD = getPriceInUSD(nullAsset);
-            decimals = 18;
-        } else {
-            priceInUSD = getPriceInUSD(selectedPool.asset);
-            IERC20Extended token = IERC20Extended(selectedPool.asset);
-            decimals = token.decimals();
-        }
-
-        uint256 scaledTotalUnit = selectedPool.totalUnit * (10 ** (18 - decimals));
-
-        selectedPool.tvl = (priceInUSD * scaledTotalUnit) / 1e18;
 
         emit Withdraw(depositor, userDeposit.amount, selectedPool.poolName);
     }
@@ -424,16 +386,12 @@ contract InsurancePool is ReentrancyGuard, Ownable {
                 IERC20(depositParam.asset).transferFrom(depositParam.depositor, address(this), depositParam.amount);
             require(success, "Token transfer failed");
             selectedPool.totalUnit += depositParam.amount;
+            selectedPool.tvl += depositParam.amount;
             price = depositParam.amount;
-
-            priceInUSD = getPriceInUSD(selectedPool.asset);
-            IERC20Extended token = IERC20Extended(selectedPool.asset);
-            decimals = token.decimals();
         } else {
             require(msg.value > 0, "Deposit cannot be zero");
-            priceInUSD = getPriceInUSD(nullAsset);
-            decimals = 18;
             selectedPool.totalUnit += msg.value;
+            selectedPool.tvl += msg.value;
             price = msg.value;
         }
 
@@ -442,12 +400,8 @@ contract InsurancePool is ReentrancyGuard, Ownable {
 
         uint256 coverUnits = baseValue * selectedPool.leverage;
 
-        uint256 scaledTotalUnit = selectedPool.totalUnit * (10 ** (18 - decimals));
-        uint256 tvl = (priceInUSD * scaledTotalUnit) / 1e18;
-
         selectedPool.coverUnits = coverUnits;
         selectedPool.baseValue = baseValue;
-        selectedPool.tvl = tvl;
         uint256 dailyPayout;
 
         if (deposits[depositParam.depositor][depositParam.poolId][depositParam.pdt].amount > 0) {
@@ -568,25 +522,6 @@ contract InsurancePool is ReentrancyGuard, Ownable {
     //     emit ClaimPaid(msg.sender, pool.poolName, proposalParam.claimAmount);
     // }
 
-    function getUserBalanceinUSD(address user) public view returns (uint256) {
-        uint256 totalBalance;
-
-        uint256 bqBTCBalance = bqBTC.balanceOf(user);
-        uint256 bqPrice = getPriceInUSD(bqBTCAddress);
-        IERC20Extended token = IERC20Extended(bqBTCAddress);
-        uint256 decimals = token.decimals();
-        uint256 scaledTotalUnit = bqBTCBalance * (10 ** (18 - decimals));
-        uint256 bqBalanceUSD = (bqPrice * scaledTotalUnit) / 1e18;
-
-        uint256 nativeTokenBalance = user.balance;
-        uint256 nativePrice = getPriceInUSD(nullAsset);
-        uint256 nativeBalanceUSD = (nativePrice * nativeTokenBalance) / 1e18;
-
-        totalBalance = nativeBalanceUSD + bqBalanceUSD;
-
-        return totalBalance;
-    }
-
     function getUserPoolDeposit(uint256 _poolId, address _user) public view returns (CoverLib.Deposits memory) {
         CoverLib.Deposits memory userDeposit = deposits[_user][_poolId][CoverLib.DepositType.Normal];
         CoverLib.Pool memory selectedPool = pools[_poolId];
@@ -614,55 +549,6 @@ contract InsurancePool is ReentrancyGuard, Ownable {
             userDeposit.daysLeft = (timeLeft + 1 days - 1) / 1 days;
         }
         return userDeposit;
-    }
-
-    function getTotalUserDepositAmountinUSD(address user) public view returns (uint256) {
-        uint256 totalPrice;
-        for (uint256 i = 1; i <= poolCount; i++) {
-            CoverLib.Deposits memory userDeposit = getUserPoolDeposit(i, user);
-            if (userDeposit.amount > 0) {
-                CoverLib.Pool memory pool = pools[i];
-                uint256 amount = userDeposit.amount;
-                uint256 decimals;
-                uint256 priceInUSD;
-                if (pool.isActive && pool.asset == nullAsset) {
-                    priceInUSD = getPriceInUSD(nullAsset);
-                    decimals = 18;
-                } else {
-                    priceInUSD = getPriceInUSD(pool.asset);
-                    IERC20Extended token = IERC20Extended(pool.asset);
-                    decimals = token.decimals();
-                }
-                uint256 scaledTotalUnit = amount * (10 ** (18 - decimals));
-                uint256 userDepositPrice = (priceInUSD * scaledTotalUnit) / 1e18;
-
-                totalPrice += userDepositPrice;
-            }
-        }
-
-        uint256 vaultCount = IVaultContract.getVaultCount();
-        for (uint256 i = 1; i <= vaultCount; i++) {
-            IVault.VaultDeposit memory uservaultdeposit = IVaultContract.getUserVaultDeposit(i, user);
-            if (uservaultdeposit.amount > 0) {
-                uint256 amount = uservaultdeposit.amount;
-                uint256 decimals;
-                uint256 priceInUSD;
-                if (uservaultdeposit.asset == nullAsset) {
-                    priceInUSD = getPriceInUSD(nullAsset);
-                    decimals = 18;
-                } else {
-                    priceInUSD = getPriceInUSD(uservaultdeposit.asset);
-                    IERC20Extended token = IERC20Extended(uservaultdeposit.asset);
-                    decimals = token.decimals();
-                }
-                uint256 scaledTotalUnit = amount * (10 ** (18 - decimals));
-                uint256 uservaultDepositPrice = (priceInUSD * scaledTotalUnit) / 1e18;
-
-                totalPrice += uservaultDepositPrice;
-            }
-        }
-
-        return totalPrice;
     }
 
     function getUserGenericDeposit(uint256 _poolId, address _user, CoverLib.DepositType pdt)
@@ -722,22 +608,8 @@ contract InsurancePool is ReentrancyGuard, Ownable {
 
     function getPoolTVL(uint256 _poolId) public view returns (uint256) {
         CoverLib.Pool memory pool = pools[_poolId];
-        uint256 priceInUSD;
-        uint256 decimals;
 
-        if (pool.isActive && pool.asset == nullAsset) {
-            priceInUSD = getPriceInUSD(nullAsset);
-            decimals = 18;
-        } else {
-            priceInUSD = getPriceInUSD(pool.asset);
-            IERC20Extended token = IERC20Extended(pool.asset);
-            decimals = token.decimals();
-        }
-
-        uint256 scaledTotalUnit = pool.totalUnit * (10 ** (18 - decimals));
-
-        uint256 tvl = (priceInUSD * scaledTotalUnit) / 1e18;
-        return tvl;
+        return pool.tvl;
     }
 
     function getTotalTVL() public view returns (uint256) {
@@ -763,17 +635,6 @@ contract InsurancePool is ReentrancyGuard, Ownable {
     // function getUserParticipation(address user) public view returns (uint256) {
     //     return participation[user];
     // }
-
-    function getPriceInUSD(address asset) public view returns (uint256) {
-        AggregatorV3Interface priceFeed = assetPriceFeeds[asset];
-        require(address(priceFeed) != address(0), "Price feed not available for asset");
-
-        (, int256 price,,,) = priceFeed.latestRoundData();
-        require(price > 0, "Invalid price from oracle");
-
-        return uint256(price) * 1e10;
-    }
-
     function setGovernance(address _governance) external onlyOwner {
         require(governance == address(0), "Governance already set");
         require(_governance != address(0), "Governance address cannot be zero");
