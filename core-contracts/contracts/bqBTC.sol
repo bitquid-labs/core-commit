@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -14,7 +14,7 @@ contract bqBTC is ERC20, Ownable {
     address public coverAddress;
     address public initialOwner;
     mapping(uint256 chainId => uint256 multiplier) public networkMultipliers;
-    IERC20 public alternativeToken; // 0x6ce8da28e2f864420840cf74474eff5fd80e65b8
+    IERC20 public alternativeToken;
     address vaultContract;
 
     event Mint(address indexed account, uint256 amount, uint256 chainId, bool native);
@@ -69,6 +69,11 @@ contract bqBTC is ERC20, Ownable {
         emit Mint(account, mintAmount, currentChainId, nativeSent);
     }
 
+    // Would remove
+    function normalMint(address account, uint256 btcAmount) external {
+        _mint(account, btcAmount);
+    }
+
     function burn(address account, uint256 amount) external {
         require(
             msg.sender == initialOwner || msg.sender == poolAddress || msg.sender == coverAddress,
@@ -82,11 +87,6 @@ contract bqBTC is ERC20, Ownable {
     }
 
     function bqMint(address account, uint256 amount) external onlyBQContracts {
-        _mint(account, amount);
-    }
-
-    function newMint(address account) external onlyBQContracts {
-        uint256 amount = 1 * 1000000000000000000;
         _mint(account, amount);
     }
 

@@ -2,8 +2,6 @@ const { ethers } = require("hardhat");
 
 const OWNER = "0x47C14E2dD82B7Cf0E7426c991225417e4C40Cd19";
 const ALT_TOKEN = "0x73795572FB8c1c737513156ecb8b1Cc9a3f9cA46";
-const poolCanister = "0xecB8efc21169e94389b47b6DAD048D346c45ed0d";
-// const BSCBTC = "0x6ce8da28e2f864420840cf74474eff5fd80e65b8";
 const MIN = 20000000000000;
 
 async function main() {
@@ -14,7 +12,7 @@ async function main() {
       "BQ BTC",
       "bqBTC",
       18,
-      200000000000000,
+      MIN,
       OWNER,
       ALT_TOKEN,
       100
@@ -29,21 +27,22 @@ async function main() {
 
     console.log(`Pool Address: ${poolAddress}`);
 
+    const vault = await ethers.getContractFactory("Vaults");
+    const vaultContract = await vault.deploy(OWNER);
+
+    const vaultAddress = await vaultContract.getAddress();
+    console.log(`Vault Address: ${vaultAddress}`);
+
     const InsuraceCover = await ethers.getContractFactory("InsuranceCover");
     const coverContract = await InsuraceCover.deploy(
       poolAddress,
+      vaultAddress,
       OWNER,
       bqBTCAddress
     );
 
     const coverAddress = await coverContract.getAddress();
     console.log(`Cover Address: ${coverAddress}`);
-
-    const vault = await ethers.getContractFactory("Vaults");
-    const vaultContract = await vault.deploy(OWNER, bqBTCAddress);
-
-    const vaultAddress = await vaultContract.getAddress();
-    console.log(`Vault Address: ${vaultAddress}`);
 
     console.log("Setting contracts...");
 
@@ -52,7 +51,6 @@ async function main() {
     await vaultContract.setCover(coverAddress);
     await vaultContract.setPool(poolAddress);
     await bqBTC.setContracts(poolAddress, coverAddress, vaultAddress);
-    await insurancePool.setPoolCanister(poolCanister);
 
     console.log("All contracts set");
   } catch (error) {
