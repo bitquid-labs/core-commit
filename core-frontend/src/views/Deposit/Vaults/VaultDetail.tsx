@@ -245,7 +245,7 @@ const VaultDetail: React.FC<Props> = ({ id }) => {
 
   // }
   return (
-    <div className="w-full mx-auto max-w-1220">
+    <div className="md:w-full w-[95%] mx-auto max-w-1220">
       {/* <button onClick={handleMintBQBTC}>Mint BQBTC</button> */}
       <div
         className="w-full rounded-40 overflow-hidden bg-gradient bg-gradient-to-b from-[#00ECBC33] to-[#83ACF000]"
@@ -258,7 +258,7 @@ const VaultDetail: React.FC<Props> = ({ id }) => {
           }
         }
       >
-        <div className="flex items-center justify-between px-95 py-52">
+        <div className="flex flex-col md:flex-row items-center justify-between md:px-95 md:py-52 px-20 py-28">
           <div className="flex flex-col items-start justify-center">
             <div className="text-16 font-[700] text-[#00ECBC]">
               {vaultData?.vaultName}
@@ -270,7 +270,7 @@ const VaultDetail: React.FC<Props> = ({ id }) => {
               <span className="ml-8 text-19">APY</span>
             </div>
           </div>
-          <div className="flex items-end gap-22">
+          <div className="flex flex-col md:flex-row md:items-end items-start gap-22 ">
             <div className="flex flex-col">
               <span className="text-15 font-[600]">Enter Amount:</span>
               <div className="flex items-center gap-4 bg-[#07040D] py-8 px-12 rounded-8 overflow-hidden h-45">
@@ -299,7 +299,7 @@ const VaultDetail: React.FC<Props> = ({ id }) => {
             </Button>
           </div>
         </div>
-        <div className="px-95 py-34 bg-[#1A1D22]">
+        <div className="md:px-95 md:py-34 px-40 py-20 bg-[#1A1D22]">
           <div className="flex items-center justify-between">
             {/* <div className="flex flex-col items-start gap-7">
               <div className="text-[#9DA3BA] text-13 font-[500]">
@@ -312,7 +312,9 @@ const VaultDetail: React.FC<Props> = ({ id }) => {
                 <span className="text-[#FFF] text-12 ml-4">{assetName}</span>
               </div>
             </div> */}
-            <div className="flex flex-col items-start gap-7">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-18 md:gap-0">
+            <div className="flex flex-col md:flex-row justify-between md:items-center items-start md:gap-120 gap-0 md:mr-120 mr-0">
+            <div className="flex flex-col items-start gap-7 mb-8 md:mb-0">
               <div className="text-[#9DA3BA] text-13 font-[500]">Risk Type</div>
               <div className="flex items-end">
                 <span className="text-[#00ECBC] text-24 font-[700] leading-[25px]">
@@ -320,7 +322,7 @@ const VaultDetail: React.FC<Props> = ({ id }) => {
                 </span>
               </div>
             </div>
-            <div className="flex flex-col items-start gap-7">
+            <div className="flex flex-col items-start gap-7 mb-8 md:mb-0">
               <div className="text-[#9DA3BA] text-13 font-[500]">
                 Tenure Period
               </div>
@@ -331,7 +333,10 @@ const VaultDetail: React.FC<Props> = ({ id }) => {
                 <span className="text-[#FFF] text-12 ml-4">Days</span>
               </div>
             </div>
-            <div className="flex flex-col items-start gap-7">
+            </div>
+
+            <div className="flex flex-col md:flex-row justify-between md:items-center items-start md:gap-120 gap-0">
+            <div className="flex flex-col items-start gap-7 mb-8 md:mb-0">
               <div className="text-[#9DA3BA] text-13 font-[500]">
                 TVL of Strategy
               </div>
@@ -342,18 +347,20 @@ const VaultDetail: React.FC<Props> = ({ id }) => {
                 <span className="text-[#FFF] text-12 ml-4"> {"USD"}</span>
               </div>
             </div>
-            <div className="flex flex-col items-start gap-7">
+            <div className="flex flex-col items-start gap-7 mt-12 md:mt-0">
               <div className="text-[#9DA3BA] text-13 font-[500]">
                 Pools Invested:
               </div>
               <div className="flex items-end">
-                <div className="flex flex-col justify-center items-center gap-4 text-[#00ECBC] text-17 font-[700] leading-[25px]">
+                <div className="flex flex-col justify-center md:items-center items-start gap-4 text-[#00ECBC] text-17 font-[700] leading-[25px]">
                   {vaultData?.pools?.map((vault, index) => (
                     <span key={index}>{vault.poolName}</span>
                   ))}
                 </div>
                 <span className="text-[#FFF] text-12 ml-4">{""}</span>
               </div>
+            </div>
+            </div>
             </div>
           </div>
           <div className="flex items-center justify-between">

@@ -274,7 +274,7 @@ contract InsurancePool is ReentrancyGuard, Ownable {
         CoverLib.Pool memory selectedPool = pools[_poolId];
         CoverLib.Deposits storage userDeposit = deposits[msg.sender][_poolId][CoverLib.DepositType.Normal];
 
-        uint256 expiry = userDeposit.startDate + (selectedPool.minPeriod * 1 days);
+        uint256 expiry = userDeposit.startDate + (selectedPool.minPeriod * 1 seconds);
 
         require(userDeposit.amount > 0, "No deposit found for this address");
         require(userDeposit.status == CoverLib.Status.Active, "Deposit is not active");
@@ -318,7 +318,7 @@ contract InsurancePool is ReentrancyGuard, Ownable {
     {
         CoverLib.Pool memory selectedPool = pools[_poolId];
         CoverLib.Deposits storage userDeposit = deposits[depositor][_poolId][pdt];
-        uint256 expiry = userDeposit.startDate + (selectedPool.minPeriod * 1 days);
+        uint256 expiry = userDeposit.startDate + (selectedPool.minPeriod * 1 seconds);
 
         require(userDeposit.amount > 0, "No deposit found for this address");
         require(userDeposit.status == CoverLib.Status.Active, "Deposit is not active");

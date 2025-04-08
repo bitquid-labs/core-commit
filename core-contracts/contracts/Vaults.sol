@@ -34,43 +34,43 @@ interface IPool {
     function getPriceInUSD(address asset) external view returns (uint256);
 }
 
-interface IGov {
-    struct ProposalParams {
-        address user;
-        CoverLib.RiskType riskType;
-        uint256 coverId;
-        string txHash;
-        string description;
-        uint256 poolId;
-        uint256 claimAmount;
-    }
+    interface IGov {
+        struct ProposalParams {
+            address user;
+            CoverLib.RiskType riskType;
+            uint256 coverId;
+            string txHash;
+            string description;
+            uint256 poolId;
+            uint256 claimAmount;
+        }
 
-    struct Proposal {
-        uint256 id;
-        uint256 votesFor;
-        uint256 votesAgainst;
-        uint256 createdAt;
-        uint256 deadline;
-        uint256 timeleft;
-        ProposalStaus status;
-        bool executed;
-        ProposalParams proposalParam;
-    }
+        struct Proposal {
+            uint256 id;
+            uint256 votesFor;
+            uint256 votesAgainst;
+            uint256 createdAt;
+            uint256 deadline;
+            uint256 timeleft;
+            ProposalStaus status;
+            bool executed;
+            ProposalParams proposalParam;
+        }
 
-    enum ProposalStaus {
-        Submitted,
-        Pending,
-        Approved,
-        Claimed,
-        Rejected
-    }
+        enum ProposalStaus {
+            Submitted,
+            Pending,
+            Approved,
+            Claimed,
+            Rejected
+        }
 
     function getProposalDetails(uint256 _proposalId) external returns (Proposal memory);
     function updateProposalStatusToClaimed(uint256 proposalId) external;
 }
 
-contract Vaults is ReentrancyGuard, Ownable {
-    using CoverLib for *;
+    contract Vaults is ReentrancyGuard, Ownable {
+        using CoverLib for *;
 
     struct Vault {
         uint256 id;
@@ -86,17 +86,17 @@ contract Vaults is ReentrancyGuard, Ownable {
         address asset;
     }
 
-    struct Deposits {
-        address lp;
-        uint256 amount;
-        uint256 poolId;
-        uint256 dailyPayout;
-        CoverLib.Status status;
-        uint256 daysLeft;
-        uint256 startDate;
-        uint256 expiryDate;
-        uint256 accruedPayout;
-    }
+        struct Deposits {
+            address lp;
+            uint256 amount;
+            uint256 poolId;
+            uint256 dailyPayout;
+            CoverLib.Status status;
+            uint256 daysLeft;
+            uint256 startDate;
+            uint256 expiryDate;
+            uint256 accruedPayout;
+        }
 
     struct VaultDeposit {
         address lp;
@@ -114,18 +114,18 @@ contract Vaults is ReentrancyGuard, Ownable {
         address asset;
     }
 
-    struct PoolInfo {
-        string poolName;
-        uint256 poolId;
-        uint256 dailyPayout;
-        uint256 depositAmount;
-        uint256 apy;
-        uint256 minPeriod;
-        uint256 tvl;
-        uint256 tcp; // Total claim paid to users
-        bool isActive; // Pool status to handle soft deletion
-        uint256 accruedPayout;
-    }
+        struct PoolInfo {
+            string poolName;
+            uint256 poolId;
+            uint256 dailyPayout;
+            uint256 depositAmount;
+            uint256 apy;
+            uint256 minPeriod;
+            uint256 tvl;
+            uint256 tcp; // Total claim paid to users
+            bool isActive; // Pool status to handle soft deletion
+            uint256 accruedPayout;
+        }
 
     mapping(uint256 => mapping(uint256 => uint256)) public vaultPercentageSplits; //vault id to pool id to the pool percentage split;
     mapping(uint256 => Vault) public vaults;
@@ -191,8 +191,8 @@ contract Vaults is ReentrancyGuard, Ownable {
         vault.minPeriod = _minPeriod;
         vault.apy = apy;
 
-        require(percentageSplit == 100, "Total split must equal 100%");
-    }
+            require(percentageSplit == 100, "Total split must equal 100%");
+        }
 
     function initialVaultWithdraw(uint256 _vaultId) public nonReentrant {
         VaultDeposit storage userVaultDeposit = userVaultDeposits[msg.sender][_vaultId];
@@ -345,8 +345,8 @@ contract Vaults is ReentrancyGuard, Ownable {
             vaultDeposits[i] = deposits[user][poolId][CoverLib.DepositType.Vault];
         }
 
-        return vaultDeposits;
-    }
+            return vaultDeposits;
+        }
 
     function getUserVaultDeposit(uint256 vaultId, address user) public view returns (VaultDeposit memory) {
         return userVaultDeposits[user][vaultId];
@@ -389,21 +389,21 @@ contract Vaults is ReentrancyGuard, Ownable {
         userVaultDeposits[user][vaultId].amount = 0;
     }
 
-    function getVaults() public view returns (Vault[] memory) {
-        Vault[] memory allVaults = new Vault[](vaultCount);
-        for (uint256 i = 1; i <= vaultCount; i++) {
-            allVaults[i - 1] = vaults[i];
+        function getVaults() public view returns (Vault[] memory) {
+            Vault[] memory allVaults = new Vault[](vaultCount);
+            for (uint256 i = 1; i <= vaultCount; i++) {
+                allVaults[i - 1] = vaults[i];
+            }
+
+            return allVaults;
         }
 
-        return allVaults;
-    }
-
-    function setGovernance(address _governance) external onlyOwner {
-        require(governance == address(0), "Governance already set");
-        require(_governance != address(0), "Governance address cannot be zero");
-        governance = _governance;
-        IGovernanceContract = IGov(_governance);
-    }
+        function setGovernance(address _governance) external onlyOwner {
+            require(governance == address(0), "Governance already set");
+            require(_governance != address(0), "Governance address cannot be zero");
+            governance = _governance;
+            IGovernanceContract = IGov(_governance);
+        }
 
     function setCover(address _coverContract) external onlyOwner {
         require(coverContract == address(0), "Cover already set");

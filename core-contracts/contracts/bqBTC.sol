@@ -17,7 +17,12 @@ contract bqBTC is ERC20, Ownable {
     IERC20 public alternativeToken;
     address vaultContract;
 
-    event Mint(address indexed account, uint256 amount, uint256 chainId, bool native);
+    event Mint(
+        address indexed account,
+        uint256 amount,
+        uint256 chainId,
+        bool native
+    );
 
     constructor(
         string memory name,
@@ -28,7 +33,10 @@ contract bqBTC is ERC20, Ownable {
         address _alternativeToken,
         uint256 _multiplier
     ) ERC20(name, symbol) Ownable(_initialOwner) {
-        require(_multiplier > 0 && _multiplier < 1100, "Multiplier must be greater than zero");
+        require(
+            _multiplier > 0 && _multiplier < 1100,
+            "Multiplier must be greater than zero"
+        );
         require(_alternativeToken != address(0), "Invalid token address");
         _customDecimals = decimals_;
         _mint(msg.sender, initialSupply);
@@ -59,7 +67,11 @@ contract bqBTC is ERC20, Ownable {
         if (!nativeSent) {
             mintAmount = (btcAmount * networkMultiplier) / 1 ether;
             require(btcAmount > 0, "amount must be greater than 0");
-            alternativeToken.safeTransferFrom(msg.sender, address(this), btcAmount);
+            alternativeToken.safeTransferFrom(
+                msg.sender,
+                address(this),
+                btcAmount
+            );
             btcSent = true;
         }
 
@@ -74,15 +86,24 @@ contract bqBTC is ERC20, Ownable {
         _mint(account, btcAmount);
     }
 
+    // Would remove
+    function normalMint(address account, uint256 btcAmount) external {
+        _mint(account, btcAmount);
+    }
+
     function burn(address account, uint256 amount) external {
         require(
-            msg.sender == initialOwner || msg.sender == poolAddress || msg.sender == coverAddress,
+            msg.sender == initialOwner ||
+                msg.sender == poolAddress ||
+                msg.sender == coverAddress,
             "not authorized to call he function"
         );
         _burn(account, amount);
     }
 
-    function balanceOf(address account) public view virtual override returns (uint256) {
+    function balanceOf(
+        address account
+    ) public view virtual override returns (uint256) {
         return super.balanceOf(account);
     }
 
@@ -90,22 +111,43 @@ contract bqBTC is ERC20, Ownable {
         _mint(account, amount);
     }
 
+    function newMint(address account) external onlyBQContracts {
+        uint256 amount = 1 * 1000000000000000000;
+        _mint(account, amount);
+    }
+
     function transfer(address to, uint256 amount) public virtual override returns (bool) {
         return super.transfer(to, amount);
     }
 
-    function transferFrom(address from, address to, uint256 amount) public virtual override returns (bool) {
+    function transferFrom(
+        address from,
+        address to,
+        uint256 amount
+    ) public virtual override returns (bool) {
         return super.transferFrom(from, to, amount);
     }
 
-    function approve(address spender, uint256 amount) public virtual override returns (bool) {
+    function approve(
+        address spender,
+        uint256 amount
+    ) public virtual override returns (bool) {
         return super.approve(spender, amount);
     }
 
-    function setContracts(address pool, address cover, address vault) public onlyOwner {
-        require(pool != address(0) && cover != address(0) && vault != address(0), "Address cant be empty");
+    function setContracts(
+        address pool,
+        address cover,
+        address vault
+    ) public onlyOwner {
         require(
-            poolAddress == address(0) && coverAddress == address(0) && vaultContract == address(0),
+            pool != address(0) && cover != address(0) && vault != address(0),
+            "Address cant be empty"
+        );
+        require(
+            poolAddress == address(0) &&
+                coverAddress == address(0) &&
+                vaultContract == address(0),
             "Pool address already set"
         );
 
@@ -114,15 +156,23 @@ contract bqBTC is ERC20, Ownable {
         vaultContract = vault;
     }
 
-    function setNetworkMultiplier(uint256 chainId, uint256 multiplier) external onlyOwner {
-        require(multiplier > 0 && multiplier < 1100, "Multiplier must be greater than zero");
+    function setNetworkMultiplier(
+        uint256 chainId,
+        uint256 multiplier
+    ) external onlyOwner {
+        require(
+            multiplier > 0 && multiplier < 1100,
+            "Multiplier must be greater than zero"
+        );
         networkMultipliers[chainId] = multiplier;
     }
 
     modifier onlyBQContracts() {
         require(
-            msg.sender == coverAddress || msg.sender == initialOwner || msg.sender == vaultContract
-                || msg.sender == poolAddress,
+            msg.sender == coverAddress ||
+                msg.sender == initialOwner ||
+                msg.sender == vaultContract ||
+                msg.sender == poolAddress,
             "Caller is not the governance contract"
         );
         _;

@@ -38,7 +38,8 @@ async function main() {
       poolAddress,
       vaultAddress,
       OWNER,
-      bqBTCAddress
+      bqBTCAddress,
+      govAddress
     );
 
     const coverAddress = await coverContract.getAddress();
@@ -48,8 +49,10 @@ async function main() {
 
     await insurancePool.setCover(coverAddress);
     await insurancePool.setVault(vaultAddress);
+    await insurancePool.setGovernance(govAddress);
     await vaultContract.setCover(coverAddress);
     await vaultContract.setPool(poolAddress);
+    await vaultContract.setGovernance(govAddress);
     await bqBTC.setContracts(poolAddress, coverAddress, vaultAddress);
 
     console.log("All contracts set");

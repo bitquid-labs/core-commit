@@ -401,7 +401,9 @@ contract InsuranceCover is ReentrancyGuard, Ownable {
             currentTime = depositInfo.withdrawalInitiated;
         }
 
-        uint256 claimableDays = (currentTime - lastClaimTime) / 1 days;
+        // uint256 claimableDays = (currentTime - lastClaimTime) / 1 days;
+
+        uint256 claimableDays = (currentTime - lastClaimTime) / 1 minutes;
 
         require(claimableDays > 0, "No claimable rewards");
 
@@ -450,7 +452,9 @@ contract InsuranceCover is ReentrancyGuard, Ownable {
             currentTime = deposits[0].withdrawalInitiated;
         }
 
-        uint256 claimableDays = (currentTime - lastClaimTime) / 1 days;
+        // uint256 claimableDays = (currentTime - lastClaimTime) / 1 days;
+
+        uint256 claimableDays = (currentTime - lastClaimTime) / 1 minutes;
 
         for (uint256 i = 0; i < deposits.length; i++) {
             CoverLib.Deposits memory deposit = deposits[i];
@@ -498,8 +502,9 @@ contract InsuranceCover is ReentrancyGuard, Ownable {
         if (depositInfo.status != CoverLib.Status.Active) {
             currentTime = depositInfo.withdrawalInitiated;
         }
+        // uint256 claimableDays = (currentTime - lastClaimTime) / 1 days;
 
-        uint256 claimableDays = (currentTime - lastClaimTime) / 1 days;
+        uint256 claimableDays = (currentTime - lastClaimTime) / 1 minutes;
 
         return claimableDays;
     }
